@@ -5,8 +5,11 @@ import org.springframework.stereotype.Service;
 import ru.arutyunovg4.dao.RecordDao;
 import ru.arutyunovg4.entity.Record;
 import ru.arutyunovg4.entity.RecordStatus;
+import ru.arutyunovg4.entity.dto.RecordsContainerDto;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class RecordService {
@@ -17,8 +20,29 @@ public class RecordService {
         this.recordDao = recordDao;
     }
 
-    public List<Record> findAllRecords() {
-        return recordDao.findAllRecords();
+    public RecordsContainerDto findAllRecords(String filterMode) {
+
+        List<Record> records = recordDao.findAllRecords();
+        int numberOfDoneRecords = (int) records.stream().filter(r -> r.getStatus() == RecordStatus.DONE).count();
+        int numberOfActiveRecords = (int) records.stream().filter(r -> r.getStatus() == RecordStatus.ACTIVE).count();
+
+        if (filterMode == null || filterMode.isBlank())
+            return new RecordsContainerDto(records, numberOfDoneRecords, numberOfActiveRecords);
+
+        String filterModeInUpperCase = filterMode.toUpperCase();
+        List<String> allowedFilterModes = Arrays.stream(RecordStatus.values())
+                .map(Enum::name)
+                .toList();
+
+        if (allowedFilterModes.contains(filterModeInUpperCase)) {
+            List<Record> filteredRecords = records.stream()
+                    .filter(record -> record.getStatus() == RecordStatus.valueOf(filterModeInUpperCase))
+                    .toList();
+            return new RecordsContainerDto(filteredRecords, numberOfDoneRecords, numberOfActiveRecords);
+        } else {
+            return new RecordsContainerDto(records, numberOfDoneRecords, numberOfActiveRecords);
+        }
+
     }
 
     public void saveRecord(String title) {
@@ -31,7 +55,7 @@ public class RecordService {
         recordDao.updateRecordStatus(id, newStatus);
     }
 
-    public void deleteRecord(int id){
+    public void deleteRecord(int id) {
         recordDao.deleteRecord(id);
     }
 }
