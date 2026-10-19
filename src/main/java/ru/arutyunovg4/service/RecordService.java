@@ -2,6 +2,7 @@ package ru.arutyunovg4.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.arutyunovg4.dao.RecordDao;
 import ru.arutyunovg4.entity.Record;
 import ru.arutyunovg4.entity.RecordStatus;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class RecordService {
     private final RecordDao recordDao;
 
@@ -20,6 +22,7 @@ public class RecordService {
         this.recordDao = recordDao;
     }
 
+    @Transactional(readOnly = true)
     public RecordsContainerDto findAllRecords(String filterMode) {
 
         List<Record> records = recordDao.findAllRecords();

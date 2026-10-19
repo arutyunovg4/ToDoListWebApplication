@@ -1,94 +1,41 @@
 package ru.arutyunovg4.dao;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import ru.arutyunovg4.entity.Record;
 import ru.arutyunovg4.entity.RecordStatus;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
+import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
-import java.util.Collections;
 import java.util.List;
 
 @Repository
 public class RecordDao {
-    private final EntityManagerFactory entityManagerFactory;
-
-    @Autowired
-    public RecordDao(EntityManagerFactory entityManagerFactory) {
-        this.entityManagerFactory = entityManagerFactory;
-    }
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public List<Record> findAllRecords() {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-
-        try {
-            entityManager.getTransaction().begin();
-
-            Query query = entityManager.createQuery("SELECT r FROM Record r");
-            List<Record> records = query.getResultList();
-
-            entityManager.getTransaction().commit();
-            return records;
-        } catch (Exception e) {
-            e.printStackTrace();
-            entityManager.getTransaction().rollback();
-            return Collections.emptyList();
-        } finally {
-            entityManager.close();
-        }
+        Query query = entityManager.createQuery("SELECT r FROM Record r ORDER BY r.id ASC ");
+        List<Record> records = query.getResultList();
+        return records;
     }
 
     public void saveRecord(Record record) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        try {
-            entityManager.getTransaction().begin();
-            entityManager.persist(record);
-            entityManager.getTransaction().commit();
-        } catch (Exception e) {
-            e.printStackTrace();
-            entityManager.getTransaction().rollback();
-        } finally {
-            entityManager.close();
-        }
-
+        entityManager.persist(record);
     }
 
     public void updateRecordStatus(int id, RecordStatus newStatus) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        try {
-            entityManager.getTransaction().begin();
-
-            Query query = entityManager.createQuery("UPDATE Record SET status =:status WHERE id =:id" );
-            query.setParameter("id",id);
-            query.setParameter("status",newStatus);
-            query.executeUpdate();
-
-            entityManager.getTransaction().commit();
-        } catch (Exception e) {
-            e.printStackTrace();
-            entityManager.getTransaction().rollback();
-        } finally {
-            entityManager.close();
-        }
+        Query query = entityManager.createQuery("UPDATE Record SET status =:status WHERE id =:id");
+        query.setParameter("id", id);
+        query.setParameter("status", newStatus);
+        query.executeUpdate();
     }
 
     public void deleteRecord(int id) {
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-        try {
-            entityManager.getTransaction().begin();
+        Query query = entityManager.createQuery("DELETE FROM Record WHERE id =:id");
+        query.setParameter("id", id);
+        query.executeUpdate();
 
-            Query query = entityManager.createQuery("DELETE FROM Record WHERE id =:id" );
-            query.setParameter("id",id);
-            query.executeUpdate();
-
-            entityManager.getTransaction().commit();
-        } catch (Exception e) {
-            e.printStackTrace();
-            entityManager.getTransaction().rollback();
-        } finally {
-            entityManager.close();
-        }
     }
 }
